@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARBLES - Game</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Header -->
+        <header class="game-header">
+            <h1 class="game-logo">MARBLES</h1>
+            <div id="turn-indicator" class="turn-indicator">
+                <span class="turn-label">TURN:</span>
+                <span id="current-player-name" class="player-name">Player 1</span>
+            </div>
+            <button class="pixel-btn small" onclick="quitGame()">QUIT</button>
+        </header>
+
+        <!-- Main Game Area -->
+        <main class="game-main">
+            <!-- Player Panel (Left) -->
+            <aside class="player-panel">
+                <h3>PLAYERS</h3>
+                <div id="players-list"></div>
+            </aside>
+
+            <!-- Game Board -->
+            <div class="board-area">
+                <canvas id="game-board" width="560" height="560"></canvas>
+                <div id="board-message" class="board-message hidden"></div>
+            </div>
+
+            <!-- Controls Panel (Right) -->
+            <aside class="control-panel">
+                <div class="dice-area">
+                    <div id="dice-display" class="dice">?</div>
+                    <button id="roll-btn" class="pixel-btn primary" onclick="handleRollDice()">
+                        ROLL DICE
+                    </button>
+                </div>
+
+                <div class="move-info">
+                    <p id="move-instruction">Roll the dice to start your turn</p>
+                </div>
+
+                <div class="game-log">
+                    <h4>GAME LOG</h4>
+                    <div id="log-entries"></div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Win Modal -->
+        <div id="win-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2 class="win-title">VICTORY!</h2>
+                <p id="winner-text">Player 1 wins!</p>
+                <div class="win-buttons">
+                    <button class="pixel-btn primary" onclick="window.location.href='/'">
+                        NEW GAME
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/audio.js"></script>
+    <script src="/static/js/board.js"></script>
+    <script src="/static/js/game.js"></script>
+    <script>
+        // Get game ID from URL
+        const gameId = '{{ game_id }}';
+
+        // Initialize game when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initGame(gameId);
+        });
+
+        function quitGame() {
+            if (confirm('Are you sure you want to quit?')) {
+                window.location.href = '/';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  marbles:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - marbles_data:/app/instance
+    restart: unless-stopped
+
+volumes:
+  marbles_data:

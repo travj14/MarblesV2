@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MARBLES - Aggravation Board Game</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Title Screen -->
+        <div id="title-screen" class="screen active">
+            <h1 class="game-title">MARBLES</h1>
+            <p class="subtitle">An Aggravation Adventure</p>
+
+            <div class="menu-buttons">
+                <button class="pixel-btn primary" onclick="showScreen('mode-screen')">
+                    NEW GAME
+                </button>
+            </div>
+
+            <div class="credits">
+                <p>A Classic Board Game</p>
+            </div>
+        </div>
+
+        <!-- Mode Selection -->
+        <div id="mode-screen" class="screen">
+            <h2>SELECT MODE</h2>
+
+            <div class="mode-cards">
+                <div class="mode-card" onclick="selectMode('ai')">
+                    <div class="mode-icon">&#129302;</div>
+                    <h3>VS COMPUTER</h3>
+                    <p>Play against AI opponent</p>
+                </div>
+
+                <div class="mode-card" onclick="selectMode('local')">
+                    <div class="mode-icon">&#128101;</div>
+                    <h3>LOCAL MULTIPLAYER</h3>
+                    <p>Play with friends</p>
+                </div>
+            </div>
+
+            <button class="pixel-btn secondary" onclick="showScreen('title-screen')">
+                BACK
+            </button>
+        </div>
+
+        <!-- Game Setup -->
+        <div id="setup-screen" class="screen">
+            <h2>GAME SETUP</h2>
+
+            <div class="setup-form">
+                <div class="form-group">
+                    <label>Your Name</label>
+                    <input type="text" id="player-name" class="pixel-input"
+                           placeholder="Enter name" maxlength="15" value="Player 1">
+                </div>
+
+                <div class="form-group" id="players-group">
+                    <label>Number of Players</label>
+                    <div class="player-select">
+                        <button class="player-btn active" data-count="2">2</button>
+                        <button class="player-btn" data-count="3">3</button>
+                        <button class="player-btn" data-count="4">4</button>
+                    </div>
+                </div>
+
+                <div class="form-group" id="difficulty-group" style="display: none;">
+                    <label>AI Difficulty</label>
+                    <div class="difficulty-select">
+                        <button class="diff-btn" data-diff="easy">EASY</button>
+                        <button class="diff-btn active" data-diff="medium">MEDIUM</button>
+                        <button class="diff-btn" data-diff="hard">HARD</button>
+                    </div>
+                </div>
+
+                <div class="form-group" id="other-players-group" style="display: none;">
+                    <label>Other Players</label>
+                    <div id="other-players-inputs"></div>
+                </div>
+            </div>
+
+            <div class="setup-buttons">
+                <button class="pixel-btn secondary" onclick="showScreen('mode-screen')">
+                    BACK
+                </button>
+                <button class="pixel-btn primary" onclick="startGame()">
+                    START GAME
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading-screen" class="screen">
+            <div class="loading-spinner"></div>
+            <p>Creating game...</p>
+        </div>
+    </div>
+
+    <script src="/static/js/api.js"></script>
+    <script>
+        let selectedMode = 'ai';
+        let selectedPlayers = 2;
+        let selectedDifficulty = 'medium';
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function selectMode(mode) {
+            selectedMode = mode;
+            showScreen('setup-screen');
+
+            const diffGroup = document.getElementById('difficulty-group');
+            const playersGroup = document.getElementById('players-group');
+            const otherPlayersGroup = document.getElementById('other-players-group');
+
+            if (mode === 'ai') {
+                diffGroup.style.display = 'block';
+                otherPlayersGroup.style.display = 'none';
+            } else {
+                diffGroup.style.display = 'none';
+                updateOtherPlayersInputs();
+            }
+        }
+
+        function updateOtherPlayersInputs() {
+            const container = document.getElementById('other-players-inputs');
+            const group = document.getElementById('other-players-group');
+
+            if (selectedMode === 'local') {
+                group.style.display = 'block';
+                let html = '';
+                for (let i = 2; i <= selectedPlayers; i++) {
+                    html += `<input type="text" class="pixel-input other-player-input"
+                             placeholder="Player ${i}" maxlength="15" value="Player ${i}">`;
+                }
+                container.innerHTML = html;
+            } else {
+                group.style.display = 'none';
+            }
+        }
+
+        // Player count buttons
+        document.querySelectorAll('.player-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.player-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedPlayers = parseInt(btn.dataset.count);
+                updateOtherPlayersInputs();
+            });
+        });
+
+        // Difficulty buttons
+        document.querySelectorAll('.diff-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedDifficulty = btn.dataset.diff;
+            });
+        });
+
+        async function startGame() {
+            showScreen('loading-screen');
+
+            const playerName = document.getElementById('player-name').value || 'Player 1';
+            const playerNames = [playerName];
+
+            if (selectedMode === 'local') {
+                document.querySelectorAll('.other-player-input').forEach((input, i) => {
+                    playerNames.push(input.value || `Player ${i + 2}`);
+                });
+            } else {
+                for (let i = 1; i < selectedPlayers; i++) {
+                    playerNames.push(`Computer ${i}`);
+                }
+            }
+
+            try {
+                const result = await GameAPI.createGame({
+                    num_players: selectedPlayers,
+                    player_names: playerNames,
+                    mode: selectedMode,
+                    ai_difficulty: selectedDifficulty
+                });
+
+                window.location.href = `/game/${result.game_id}`;
+            } catch (error) {
+                alert('Failed to create game: ' + error.message);
+                showScreen('setup-screen');
+            }
+        }
+    </script>
+</body>
+</html>
